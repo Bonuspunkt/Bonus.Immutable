@@ -1,0 +1,99 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
+
+namespace Bonus.Immutable.Rewriter
+{
+    class ImmutableSetGenerator : CSharpSyntaxRewriter {
+        private readonly Type _immutable;
+
+        public ImmutableSetGenerator(Type immutable) {
+            _immutable = immutable;
+        }
+
+
+        public override SyntaxNode VisitNamespaceDeclaration(NamespaceDeclarationSyntax node) {
+            return base.VisitNamespaceDeclaration(
+                node.AddUsings(
+                    UsingDirective(_immutable.Namespace.ToNameSyntax()),
+                    UsingDirective(typeof(Dictionary<,>).Namespace.ToNameSyntax())
+                )
+            );
+        }
+
+        public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node) {
+            return base.VisitClassDeclaration(
+                node.AddMembers(
+                    ImmutableSet(_immutable, node.Identifier.Text)
+                )
+            );
+        }
+
+        private static MethodDeclarationSyntax ImmutableSet(Type type, string selfName) {
+            return MethodDeclaration(
+                IdentifierName(type.Name),
+                Identifier("Set")
+            )
+            .AddModifiers(Token(SyntaxKind.PublicKeyword))
+            .AddParameterListParameters(
+                Parameter(Identifier("properties"))
+                    .WithType(GenericName(Identifier("Dictionary"))
+                        .AddTypeArgumentListArguments(
+                            PredefinedType(Token(SyntaxKind.StringKeyword)),
+                            PredefinedType( Token(SyntaxKind.ObjectKeyword))
+                        )
+                    )
+                    .WithDefault(EqualsValueClause(LiteralExpression( SyntaxKind.NullLiteralExpression)))
+            )
+            .AddBodyStatements(
+                ReturnStatement(
+                    ObjectCreationExpression(
+                        IdentifierName(selfName),
+                        ArgumentList(),
+                        InitializerExpression(
+                            SyntaxKind.ObjectInitializerExpression,
+                            SeparatedList<ExpressionSyntax>(
+                                type.GetTypeInfo().GetProperties().Select(ImmutableSetAssignment)
+                            )
+                        )
+                    )
+                )
+            );
+        }
+
+        private static AssignmentExpressionSyntax ImmutableSetAssignment(PropertyInfo property) {
+
+            return AssignmentExpression(
+                SyntaxKind.SimpleAssignmentExpression,
+                IdentifierName(property.Name),
+                ConditionalExpression(
+                    InvocationExpression(
+                        MemberAccessExpression(
+                            SyntaxKind.SimpleMemberAccessExpression,
+                            IdentifierName("properties"),
+                            IdentifierName("ContainsKey")
+                        )
+                    )
+                    .AddArgumentListArguments(
+                        Argument(LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(property.Name)))
+                    ),
+                    CastExpression(
+                        property.PropertyType.Name.ToNameSyntax(),
+                        ElementAccessExpression(IdentifierName("properties"))
+                            .AddArgumentListArguments(
+                                Argument(LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(property.Name)))
+                        )
+                    ),
+                    IdentifierName(property.Name)
+                )
+            );
+
+        }
+
+    }
+}
