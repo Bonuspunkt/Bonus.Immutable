@@ -24,7 +24,7 @@ namespace Bonus.Immutable.Test
         {
             var resolver = TypeGenerator.Generate(new[]{ typeof(IEntity) });
 
-            var entity = (IEntity)Activator.CreateInstance(resolver(typeof(IEntity)));
+            var entity = resolver.CreateInstance<IEntity>();
             Assert.Equal(default(int), entity.Id);
             Assert.Equal(default(string), entity.Text);
 

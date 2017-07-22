@@ -13,7 +13,7 @@ interface IObject : IImmutable<IObject> {
 
 // creating an instance
 var resolver = TypeGenerator.Generate(new[]{ typeof(IObject) });
-var instance = (IObject)Activator.CreateInstance(resolver(typeof(IObject)));
+var instance = resolver.CreateInstance<IObject>();
 
 // changing properties
 var newInstance = instance
