@@ -36,7 +36,7 @@ namespace Bonus.Immutable.Rewriter
 
         private static MethodDeclarationSyntax ImmutableSet(Type type, string selfName) {
             return MethodDeclaration(
-                IdentifierName(type.Name),
+                type.FullName.ToNameSyntax(),
                 Identifier("Set")
             )
             .AddModifiers(Token(SyntaxKind.PublicKeyword))
