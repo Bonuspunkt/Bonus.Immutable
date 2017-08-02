@@ -28,5 +28,13 @@ namespace Bonus.Immutable
         public static bool CanBeNull(this Type type) {
             return !type.GetTypeInfo().IsValueType || Nullable.GetUnderlyingType(type) != null;
         }
+
+        public static IEnumerable<PropertyInfo> GetAllProperties(this Type type) {
+            var typeInfo = type.GetTypeInfo();
+            return typeInfo.IsInterface
+                ? typeInfo.GetProperties().Concat(
+                    typeInfo.GetInterfaces().SelectMany(@interface => @interface.GetProperties()))
+                : typeInfo.GetProperties();
+        }
     }
 }

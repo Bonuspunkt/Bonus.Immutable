@@ -5,23 +5,12 @@ using Xunit;
 
 namespace Bonus.Immutable.Test
 {
-
     public interface IEntity : IImmutable<IEntity> {
         int Id { get; }
         string Text { get; }
     }
 
-    public interface INotImmutable {}
-
-    public interface IBrokenImmutable : IImmutable<IBrokenImmutable> {
-        int Number { get; set; }
-    }
-
-    public interface Entity : IImmutable<Entity> {
-        int Id { get; }
-    }
-
-    public class TypeGeneratorTest
+    public partial class TypeGeneratorTest
     {
         [Fact]
         public void GenerateValidInterface() {
@@ -56,7 +45,12 @@ namespace Bonus.Immutable.Test
             Assert.Equal("Name.Space", type.Namespace);
 
         }
+    }
 
+    public interface INotImmutable {}
+
+    public partial class TypeGeneratorTest
+    {
         [Fact]
         public void NotImmutableTest() {
             var ex = Assert.Throws<ArgumentException>(
@@ -64,7 +58,14 @@ namespace Bonus.Immutable.Test
             );
             Assert.True(ex.Message.StartsWith("Bonus.Immutable.Test.INotImmutable does not implement IImmutable<INotImmutable>"));
         }
+    }
 
+    public interface IBrokenImmutable : IImmutable<IBrokenImmutable> {
+        int Number { get; set; }
+    }
+
+    public partial class TypeGeneratorTest
+    {
         [Fact]
         public void BrokenImmutableTest() {
             var ex = Assert.Throws<ArgumentException>(
@@ -72,10 +73,31 @@ namespace Bonus.Immutable.Test
             );
             Assert.True(ex.Message.StartsWith("Bonus.Immutable.Test.IBrokenImmutable.Number has a setter"));
         }
+    }
 
+    public interface Entity : IImmutable<Entity> {
+        int Id { get; }
+    }
+
+    public partial class TypeGeneratorTest
+    {
         [Fact]
         public void ImmutableNameWithout_I_PrefixTest() {
             var resolver = TypeGenerator.Generate(new[]{ typeof(Entity) });
+        }
+    }
+
+    public interface IId<T> {
+        T Id { get; }
+    }
+    public interface IEntityWithInterface : IImmutable<IEntityWithInterface>, IId<int> {}
+
+
+    public partial class TypeGeneratorTest
+    {
+        [Fact]
+        public void ImmutableWithMultipleInterfacesTest() {
+            var resolver = TypeGenerator.Generate(new[]{ typeof(IEntityWithInterface) });
         }
     }
 }
