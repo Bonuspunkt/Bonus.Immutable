@@ -58,7 +58,7 @@ namespace Bonus.Immutable.Rewriter
                         InitializerExpression(
                             SyntaxKind.ObjectInitializerExpression,
                             SeparatedList<ExpressionSyntax>(
-                                type.GetTypeInfo().GetProperties().Select(ImmutableSetAssignment)
+                                type.GetAllProperties().Select(ImmutableSetAssignment)
                             )
                         )
                     )

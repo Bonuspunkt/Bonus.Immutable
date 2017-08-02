@@ -60,7 +60,7 @@ namespace Bonus.Immutable.Rewriter
                 LiteralExpression( SyntaxKind.NullLiteralExpression)
             );
 
-            var body = type.GetTypeInfo().GetProperties()
+            var body = type.GetAllProperties()
                 .Select(property =>
                     InvocationExpression(
                         IdentifierName("Equals")
@@ -126,18 +126,18 @@ namespace Bonus.Immutable.Rewriter
                         )
                 ),
             };
-            statements.AddRange(type.GetTypeInfo().GetProperties().Select(HashCodeForProperty));
+            statements.AddRange(type.GetAllProperties().Select(HashCodeForProperty));
             statements.Add(ReturnStatement(IdentifierName("hashCode")));
 
             return MethodDeclaration(PredefinedType(Token(SyntaxKind.IntKeyword)), Identifier("GetHashCode"))
-            .AddModifiers(Token(SyntaxKind.PublicKeyword))
-            .AddModifiers(Token(SyntaxKind.OverrideKeyword))
-            .AddBodyStatements(
-                CheckedStatement(
-                    SyntaxKind.UncheckedStatement,
-                    Block(statements.ToArray())
-                )
-            );
+                .AddModifiers(Token(SyntaxKind.PublicKeyword))
+                .AddModifiers(Token(SyntaxKind.OverrideKeyword))
+                .AddBodyStatements(
+                    CheckedStatement(
+                        SyntaxKind.UncheckedStatement,
+                        Block(statements.ToArray())
+                    )
+                );
         }
 
         private static ExpressionStatementSyntax HashCodeForProperty(PropertyInfo property) {

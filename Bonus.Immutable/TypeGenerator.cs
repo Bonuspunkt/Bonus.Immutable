@@ -32,7 +32,7 @@ namespace Bonus.Immutable
                     throw new ArgumentException($"{ type.FullName } does not implement IImmutable<{ type.Name }>", nameof(types));
                 }
 
-                foreach (var property in typeInfo.GetProperties()) {
+                foreach (var property in type.GetAllProperties()) {
                     if (property.CanWrite) {
                         throw new ArgumentException($"{ type.FullName }.{property.Name} has a setter", nameof(types));
                     }
