@@ -56,16 +56,20 @@ namespace Bonus.Immutable.Test
 
         [Fact]
         public void NotImmutableTest() {
-            Assert.Throws<ArgumentException>(
+            var ex = Assert.Throws<ArgumentException>(
                 () => TypeGenerator.Generate(new[]{ typeof(INotImmutable) })
             );
+            Assert.True(ex.Message.StartsWith("Bonus.Immutable.Test.INotImmutable does not implement IImmutable<INotImmutable>"));
         }
 
         [Fact]
         public void BrokenImmutableTest() {
-            Assert.Throws<ArgumentException>(
+            var ex = Assert.Throws<ArgumentException>(
                 () => TypeGenerator.Generate(new[]{ typeof(IBrokenImmutable) })
             );
+
+            Assert.True(ex.Message.StartsWith("Bonus.Immutable.Test.IBrokenImmutable.Number has a setter"));
+        }
         }
     }
 }
