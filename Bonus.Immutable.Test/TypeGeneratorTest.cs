@@ -17,11 +17,14 @@ namespace Bonus.Immutable.Test
         int Number { get; set; }
     }
 
+    public interface Entity : IImmutable<Entity> {
+        int Id { get; }
+    }
+
     public class TypeGeneratorTest
     {
         [Fact]
-        public void GenerateValidInterface()
-        {
+        public void GenerateValidInterface() {
             var resolver = TypeGenerator.Generate(new[]{ typeof(IEntity) });
 
             var entity = resolver.CreateInstance<IEntity>();
@@ -67,9 +70,12 @@ namespace Bonus.Immutable.Test
             var ex = Assert.Throws<ArgumentException>(
                 () => TypeGenerator.Generate(new[]{ typeof(IBrokenImmutable) })
             );
-
             Assert.True(ex.Message.StartsWith("Bonus.Immutable.Test.IBrokenImmutable.Number has a setter"));
         }
+
+        [Fact]
+        public void ImmutableNameWithout_I_PrefixTest() {
+            var resolver = TypeGenerator.Generate(new[]{ typeof(Entity) });
         }
     }
 }

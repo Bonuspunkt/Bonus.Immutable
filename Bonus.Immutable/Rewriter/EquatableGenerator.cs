@@ -86,7 +86,7 @@ namespace Bonus.Immutable.Rewriter
                     Identifier("Equals")
                 )
                 .AddModifiers(Token(SyntaxKind.PublicKeyword))
-                .AddParameterListParameters(Parameter( Identifier("other")).WithType(IdentifierName(type.Name)))
+                .AddParameterListParameters(Parameter(Identifier("other")).WithType(type.FullName.ToNameSyntax()))
                 .AddBodyStatements(ReturnStatement(body));
         }
 

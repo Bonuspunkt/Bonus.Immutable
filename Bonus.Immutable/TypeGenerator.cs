@@ -15,8 +15,10 @@ namespace Bonus.Immutable
 {
     public class TypeGenerator {
         public static ImmutableResolver Generate(
-            IEnumerable<Type> types, string @namespace = "Generated", Func<Type, Rewrite> getRewrite = null
+            IEnumerable<Type> types, string @namespace = null, Func<Type, Rewrite> getRewrite = null
         ) {
+            @namespace = @namespace ?? GenerateNamespace();
+
             foreach (var type in types) {
                 var typeInfo = type.GetTypeInfo();
 
@@ -61,6 +63,7 @@ namespace Bonus.Immutable
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
                     .WithOptimizationLevel(OptimizationLevel.Release)
                     .WithPlatform(Platform.AnyCpu)
+                    .WithModuleName(DateTime.Now.Ticks.ToString())
             );
 
             using (var peStream = new MemoryStream())
@@ -87,6 +90,24 @@ namespace Bonus.Immutable
             }
         }
 
+        private static string GenerateNamespace() {
+            var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvxyz".ToCharArray();
+
+            IEnumerable<char> Convert(long number, int radix) {
+                if (radix < 2 || radix > chars.Length) {
+                    throw new ArgumentOutOfRangeException(nameof(radix), $"radix must be between 2 and { chars.Length }");
+                }
+
+                do {
+                    yield return chars[number % radix];
+                    number = (number / radix) | 0;
+                } while (number > 0);
+            }
+
+            var timeFragment = Convert(DateTime.Now.Ticks, chars.Length).Reverse();
+            return $"Gen{ string.Join("", timeFragment) }";
+        }
+
         private static ClassDeclarationSyntax Class(Type immutable) {
 
             var className = immutable.Name;
@@ -99,7 +120,7 @@ namespace Bonus.Immutable
 
             return ClassDeclaration(className)
                 .AddBaseListTypes(
-                    SimpleBaseType(IdentifierName(immutable.Name))
+                    SimpleBaseType(immutable.FullName.ToNameSyntax())
                 )
                 .AddModifiers(Token(SyntaxKind.PublicKeyword));
         }

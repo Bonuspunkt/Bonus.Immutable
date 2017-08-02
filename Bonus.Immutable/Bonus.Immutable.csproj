@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard1.6</TargetFramework>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
     <AssemblyVersion>1.0.0</AssemblyVersion>
     <Version>1.0.0</Version>
     <PackageLicenseUrl>https://github.com/Bonuspunkt/Bonus.Immutable/blob/master/LICENSE</PackageLicenseUrl>
@@ -12,6 +12,5 @@
     <PackageReference Include="Microsoft.CodeAnalysis.Compilers" Version="2.3.1" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="2.3.1" />
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
-    <PackageReference Include="System.ValueTuple" Version="4.3.1" />
   </ItemGroup>
 </Project>
