@@ -1,12 +1,14 @@
 # Bonus.Immutable
 [![Build status](https://ci.appveyor.com/api/projects/status/it69oo1vy2a6ix00/branch/master?svg=true)](https://ci.appveyor.com/project/Bonuspunkt/bonus-immutable/branch/master)
+[![Nuget version](https://img.shields.io/nuget/v/Bonus.Immutable.svg)](https://www.nuget.org/packages/Bonus.Immutable/)
+
 
 Immutable DataTypes for .net
 
 ## sample usage
 ``` C#
 // "record" declaration
-interface IObject : IImmutable<IObject> {
+public interface IObject : IImmutable<IObject> {
     int Number { get; }
     string Text { get; }
 }
