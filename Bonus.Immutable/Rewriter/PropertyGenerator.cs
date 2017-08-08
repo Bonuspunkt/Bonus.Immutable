@@ -41,7 +41,7 @@ namespace Bonus.Immutable.Rewriter
 
         public static PropertyDeclarationSyntax Property(PropertyInfo property) {
             return PropertyDeclaration(
-                property.PropertyType.Name.ToNameSyntax(),
+                property.PropertyType.ToTypeSyntax(),
                 Identifier(property.Name)
             )
             .AddModifiers(Token(SyntaxKind.PublicKeyword))

@@ -36,5 +36,14 @@ namespace Bonus.Immutable
                     typeInfo.GetInterfaces().SelectMany(@interface => @interface.GetProperties()))
                 : typeInfo.GetProperties();
         }
+
+        public static TypeSyntax ToTypeSyntax(this Type type) {
+            var actualType = Nullable.GetUnderlyingType(type) ?? type;
+            var nullable = type != actualType;
+            if (nullable) {
+                return NullableType(actualType.Name.ToNameSyntax());
+            }
+            return actualType.Name.ToNameSyntax();
+        }
     }
 }

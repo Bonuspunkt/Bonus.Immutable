@@ -92,12 +92,24 @@ namespace Bonus.Immutable.Test
     }
     public interface IEntityWithInterface : IImmutable<IEntityWithInterface>, IId<int> {}
 
-
     public partial class TypeGeneratorTest
     {
         [Fact]
         public void ImmutableWithMultipleInterfacesTest() {
             var resolver = TypeGenerator.Generate(new[]{ typeof(IEntityWithInterface) });
+        }
+    }
+
+
+    public interface NullableEntity : IImmutable<NullableEntity> {
+        bool? NullableBoolean { get; }
+    }
+
+    public partial class TypeGeneratorTest
+    {
+        [Fact]
+        public void NullableTest() {
+            var resolver = TypeGenerator.Generate(new[]{ typeof(NullableEntity) });
         }
     }
 }
