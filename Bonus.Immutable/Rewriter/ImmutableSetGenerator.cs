@@ -83,7 +83,7 @@ namespace Bonus.Immutable.Rewriter
                         Argument(LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(property.Name)))
                     ),
                     CastExpression(
-                        property.PropertyType.Name.ToNameSyntax(),
+                        property.PropertyType.ToTypeSyntax(),
                         ElementAccessExpression(IdentifierName("properties"))
                             .AddArgumentListArguments(
                                 Argument(LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(property.Name)))

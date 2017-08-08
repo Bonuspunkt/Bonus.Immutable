@@ -17,7 +17,8 @@ namespace Bonus.Immutable.Rewriter
 
         public override SyntaxNode VisitNamespaceDeclaration(NamespaceDeclarationSyntax node) {
             var usings = _immutable.GetAllProperties()
-                .Select(p => p.PropertyType.Namespace)
+                .SelectMany(p => new[]{ p.PropertyType }.Concat(p.PropertyType.GetGenericArguments()))
+                .Select(type => type.Namespace)
                 .Distinct()
                 .Select(name => UsingDirective(name.ToNameSyntax()))
                 .ToArray();
@@ -25,7 +26,6 @@ namespace Bonus.Immutable.Rewriter
             return base.VisitNamespaceDeclaration(
                 node.AddUsings(usings)
             );
-
         }
 
         public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node) {
@@ -41,7 +41,7 @@ namespace Bonus.Immutable.Rewriter
 
         public static PropertyDeclarationSyntax Property(PropertyInfo property) {
             return PropertyDeclaration(
-                property.PropertyType.Name.ToNameSyntax(),
+                property.PropertyType.ToTypeSyntax(),
                 Identifier(property.Name)
             )
             .AddModifiers(Token(SyntaxKind.PublicKeyword))

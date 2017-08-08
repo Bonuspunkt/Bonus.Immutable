@@ -2,7 +2,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp1.1</TargetFramework>
     <AssemblyVersion>1.0.0</AssemblyVersion>
-    <Version>1.0.2</Version>
+    <Version>1.0.3</Version>
     <PackageLicenseUrl>https://github.com/Bonuspunkt/Bonus.Immutable/blob/master/LICENSE</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/Bonuspunkt/Bonus.Immutable</PackageProjectUrl>
     <RepositoryUrl>https://github.com/Bonuspunkt/Bonus.Immutable.git</RepositoryUrl>

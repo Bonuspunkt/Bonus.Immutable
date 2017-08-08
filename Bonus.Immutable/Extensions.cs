@@ -36,5 +36,24 @@ namespace Bonus.Immutable
                     typeInfo.GetInterfaces().SelectMany(@interface => @interface.GetProperties()))
                 : typeInfo.GetProperties();
         }
+
+        public static TypeSyntax ToTypeSyntax(this Type type) {
+
+            if (type.GetTypeInfo().IsGenericType) {
+                var typeDef = type.GetGenericTypeDefinition();
+                var arguments = type.GetGenericArguments();
+
+                return GenericName(Identifier(typeDef.Name.Split('`').First()))
+                    .WithTypeArgumentList(
+                        TypeArgumentList(
+                            SeparatedList<TypeSyntax>(
+                                arguments.Select(arg => IdentifierName(arg.Name))
+                            )
+                        )
+                    );
+            }
+
+            return type.Name.ToNameSyntax();
+        }
     }
 }
