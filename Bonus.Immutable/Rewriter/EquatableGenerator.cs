@@ -65,12 +65,12 @@ namespace Bonus.Immutable.Rewriter
                     InvocationExpression(
                         IdentifierName("Equals")
                     ).AddArgumentListArguments(
-                        Argument( IdentifierName("Id")),
+                        Argument(IdentifierName(property.Name)),
                         Argument(
                             MemberAccessExpression(
                                 SyntaxKind.SimpleMemberAccessExpression,
                                 IdentifierName("other"),
-                                IdentifierName("Id")
+                                IdentifierName(property.Name)
                             )
                         )
                     )

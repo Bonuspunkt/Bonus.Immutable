@@ -76,7 +76,7 @@ namespace Bonus.Immutable.Test
     }
 
     public interface Entity : IImmutable<Entity> {
-        int Id { get; }
+        int Number { get; }
     }
 
     public partial class TypeGeneratorTest
