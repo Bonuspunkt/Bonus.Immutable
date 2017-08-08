@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Bonus.Immutable.Test
@@ -110,6 +112,25 @@ namespace Bonus.Immutable.Test
         [Fact]
         public void NullableTest() {
             var resolver = TypeGenerator.Generate(new[]{ typeof(NullableEntity) });
+        }
+    }
+
+
+    public interface GenericTypeProperty : IImmutable<GenericTypeProperty> {
+        IEnumerable<Regex> Patterns { get; }
+    }
+    public interface MoreComplexGenericType : IImmutable<MoreComplexGenericType> {
+        Tuple<Task, Regex> OddTuple { get; }
+    }
+
+    public partial class TypeGeneratorTest
+    {
+        [Fact]
+        public void Test() {
+            var resolver = TypeGenerator.Generate(new[] {
+                typeof(GenericTypeProperty),
+                typeof(MoreComplexGenericType)
+            });
         }
     }
 }

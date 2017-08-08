@@ -100,7 +100,7 @@ namespace Bonus.Immutable
 
                 do {
                     yield return chars[number % radix];
-                    number = (number / radix) | 0;
+                    number = (number / radix);
                 } while (number > 0);
             }
 
