@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyVersion>1.0.0</AssemblyVersion>
     <Version>1.0.3</Version>
     <PackageLicenseUrl>https://github.com/Bonuspunkt/Bonus.Immutable/blob/master/LICENSE</PackageLicenseUrl>
