@@ -9,15 +9,18 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Bonus.Immutable.Rewriter
 {
-    class ImmutableSetGenerator : CSharpSyntaxRewriter {
+    class ImmutableSetGenerator : CSharpSyntaxRewriter
+    {
         private readonly Type _immutable;
 
-        public ImmutableSetGenerator(Type immutable) {
+        public ImmutableSetGenerator(Type immutable)
+        {
             _immutable = immutable;
         }
 
 
-        public override SyntaxNode VisitNamespaceDeclaration(NamespaceDeclarationSyntax node) {
+        public override SyntaxNode VisitNamespaceDeclaration(NamespaceDeclarationSyntax node)
+        {
             return base.VisitNamespaceDeclaration(
                 node.AddUsings(
                     UsingDirective(_immutable.Namespace.ToNameSyntax()),
@@ -26,7 +29,8 @@ namespace Bonus.Immutable.Rewriter
             );
         }
 
-        public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node) {
+        public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
+        {
             return base.VisitClassDeclaration(
                 node.AddMembers(
                     ImmutableSet(_immutable, node.Identifier.Text)
@@ -34,7 +38,8 @@ namespace Bonus.Immutable.Rewriter
             );
         }
 
-        private static MethodDeclarationSyntax ImmutableSet(Type type, string selfName) {
+        private static MethodDeclarationSyntax ImmutableSet(Type type, string selfName)
+        {
             return MethodDeclaration(
                 type.FullName.ToNameSyntax(),
                 Identifier("Set")
@@ -45,10 +50,10 @@ namespace Bonus.Immutable.Rewriter
                     .WithType(GenericName(Identifier("Dictionary"))
                         .AddTypeArgumentListArguments(
                             PredefinedType(Token(SyntaxKind.StringKeyword)),
-                            PredefinedType( Token(SyntaxKind.ObjectKeyword))
+                            PredefinedType(Token(SyntaxKind.ObjectKeyword))
                         )
                     )
-                    .WithDefault(EqualsValueClause(LiteralExpression( SyntaxKind.NullLiteralExpression)))
+                    .WithDefault(EqualsValueClause(LiteralExpression(SyntaxKind.NullLiteralExpression)))
             )
             .AddBodyStatements(
                 ReturnStatement(
@@ -66,7 +71,8 @@ namespace Bonus.Immutable.Rewriter
             );
         }
 
-        private static AssignmentExpressionSyntax ImmutableSetAssignment(PropertyInfo property) {
+        private static AssignmentExpressionSyntax ImmutableSetAssignment(PropertyInfo property)
+        {
 
             return AssignmentExpression(
                 SyntaxKind.SimpleAssignmentExpression,

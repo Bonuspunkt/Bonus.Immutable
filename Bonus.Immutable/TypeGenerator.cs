@@ -13,27 +13,36 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Bonus.Immutable
 {
-    public class TypeGenerator {
+    public class TypeGenerator
+    {
         public static ImmutableResolver Generate(
             IEnumerable<Type> types, string @namespace = null, Func<Type, Rewrite> getRewrite = null
-        ) {
+        )
+        {
             @namespace = @namespace ?? GenerateNamespace();
 
-            foreach (var type in types) {
+            foreach (var type in types)
+            {
                 var typeInfo = type.GetTypeInfo();
 
-                if (!typeInfo.IsInterface) {
+                if (!typeInfo.IsInterface)
+                {
                     throw new ArgumentException($"{ type.FullName } is not an interface", nameof(types));
                 }
 
-                try {
+                try
+                {
                     typeof(IImmutable<>).GetTypeInfo().MakeGenericType(type);
-                } catch {
+                }
+                catch
+                {
                     throw new ArgumentException($"{ type.FullName } does not implement IImmutable<{ type.Name }>", nameof(types));
                 }
 
-                foreach (var property in type.GetAllProperties()) {
-                    if (property.CanWrite) {
+                foreach (var property in type.GetAllProperties())
+                {
+                    if (property.CanWrite)
+                    {
                         throw new ArgumentException($"{ type.FullName }.{property.Name} has a setter", nameof(types));
                     }
                 }
@@ -41,7 +50,7 @@ namespace Bonus.Immutable
 
 
             var compilationUnits = types.Select(type =>
-                GetRewriters(type).Concat(new []{
+                GetRewriters(type).Concat(new[]{
                     getRewrite != null ? getRewrite(type) : node => node,
 #if DEBUG
                     node => node.NormalizeWhitespace(),
@@ -67,9 +76,11 @@ namespace Bonus.Immutable
             );
 
             using (var peStream = new MemoryStream())
-            using (var pdbStream = new MemoryStream()) {
+            using (var pdbStream = new MemoryStream())
+            {
                 var result = compilation.Emit(peStream, pdbStream);
-                if (!result.Success) {
+                if (!result.Success)
+                {
                     var error = string.Join(
                         Environment.NewLine,
                         result.Diagnostics.Select(d => d.ToString())
@@ -90,15 +101,19 @@ namespace Bonus.Immutable
             }
         }
 
-        private static string GenerateNamespace() {
+        private static string GenerateNamespace()
+        {
             var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvxyz".ToCharArray();
 
-            IEnumerable<char> Convert(long number, int radix) {
-                if (radix < 2 || radix > chars.Length) {
+            IEnumerable<char> Convert(long number, int radix)
+            {
+                if (radix < 2 || radix > chars.Length)
+                {
                     throw new ArgumentOutOfRangeException(nameof(radix), $"radix must be between 2 and { chars.Length }");
                 }
 
-                do {
+                do
+                {
                     yield return chars[number % radix];
                     number = (number / radix);
                 } while (number > 0);
@@ -108,12 +123,15 @@ namespace Bonus.Immutable
             return $"Gen{ string.Join("", timeFragment) }";
         }
 
-        private static ClassDeclarationSyntax Class(Type immutable) {
+        private static ClassDeclarationSyntax Class(Type immutable)
+        {
 
             var className = immutable.Name;
-            if (className.StartsWith("I")) {
+            if (className.StartsWith("I"))
+            {
                 var secondChart = className.Substring(1, 1);
-                if (secondChart == secondChart.ToUpperInvariant()) {
+                if (secondChart == secondChart.ToUpperInvariant())
+                {
                     className = className.Substring(1);
                 }
             }
@@ -126,13 +144,15 @@ namespace Bonus.Immutable
         }
 
 
-        private static IEnumerable<Rewrite> GetRewriters(Type type) {
+        private static IEnumerable<Rewrite> GetRewriters(Type type)
+        {
             yield return unit => (CompilationUnitSyntax)new PropertyGenerator(type).Visit(unit);
             yield return unit => (CompilationUnitSyntax)new EquatableGenerator(type).Visit(unit);
             yield return unit => (CompilationUnitSyntax)new ImmutableSetGenerator(type).Visit(unit);
         }
 
-        private static IEnumerable<MetadataReference> GetReferences(IEnumerable<Type> types) {
+        private static IEnumerable<MetadataReference> GetReferences(IEnumerable<Type> types)
+        {
             var assemblies = types.Select(type => type.GetTypeInfo().Assembly);
             var referencedAssemblies = ResolveReferences(assemblies);
 
@@ -141,29 +161,34 @@ namespace Bonus.Immutable
                 .ToArray();
         }
 
-        public static IEnumerable<Assembly> ResolveReferences(IEnumerable<Assembly> assemblies) {
+        public static IEnumerable<Assembly> ResolveReferences(IEnumerable<Assembly> assemblies)
+        {
             var assemblyNames = assemblies.SelectMany(a => a.GetReferencedAssemblies()).ToList();
 
             int oldCount, newCount;
-            do {
+            do
+            {
                 oldCount = assemblyNames.Count;
                 var refNames = assemblyNames
                     .Select(LoadAssembly)
                     .SelectMany(assembly => assembly.GetReferencedAssemblies())
                     .ToArray();
 
-                foreach (var refName in refNames) {
-                    if (!assemblyNames.Any(name => refName.Name == name.Name)) {
+                foreach (var refName in refNames)
+                {
+                    if (!assemblyNames.Any(name => refName.Name == name.Name))
+                    {
                         assemblyNames.Add(refName);
                     }
                 }
                 newCount = assemblyNames.Count;
-            } while(oldCount != newCount);
+            } while (oldCount != newCount);
 
             return assemblyNames.Select(LoadAssembly).ToArray();
         }
 
-        private static Assembly LoadAssembly(AssemblyName name) {
+        private static Assembly LoadAssembly(AssemblyName name)
+        {
             return AssemblyLoadContext.Default.LoadFromAssemblyName(name);
         }
     }

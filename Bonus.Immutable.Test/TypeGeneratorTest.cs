@@ -7,7 +7,8 @@ using Xunit;
 
 namespace Bonus.Immutable.Test
 {
-    public interface IEntity : IImmutable<IEntity> {
+    public interface IEntity : IImmutable<IEntity>
+    {
         int Id { get; }
         string Text { get; }
     }
@@ -15,8 +16,9 @@ namespace Bonus.Immutable.Test
     public partial class TypeGeneratorTest
     {
         [Fact]
-        public void GenerateValidInterface() {
-            var resolver = TypeGenerator.Generate(new[]{ typeof(IEntity) });
+        public void GenerateValidInterface()
+        {
+            var resolver = TypeGenerator.Generate(new[] { typeof(IEntity) });
 
             var entity = resolver.CreateInstance<IEntity>();
             Assert.Equal(default(int), entity.Id);
@@ -32,11 +34,12 @@ namespace Bonus.Immutable.Test
         }
 
         [Fact]
-        public void GenerateVerifyAdditionalParameters() {
+        public void GenerateVerifyAdditionalParameters()
+        {
             var executed = false;
 
             var resolver = TypeGenerator.Generate(
-                new[]{ typeof(IEntity) },
+                new[] { typeof(IEntity) },
                 "Name.Space",
                 _ => node => { executed = true; return node; }
             );
@@ -49,84 +52,96 @@ namespace Bonus.Immutable.Test
         }
     }
 
-    public interface INotImmutable {}
+    public interface INotImmutable { }
 
     public partial class TypeGeneratorTest
     {
         [Fact]
-        public void NotImmutableTest() {
+        public void NotImmutableTest()
+        {
             var ex = Assert.Throws<ArgumentException>(
-                () => TypeGenerator.Generate(new[]{ typeof(INotImmutable) })
+                () => TypeGenerator.Generate(new[] { typeof(INotImmutable) })
             );
-            Assert.True(ex.Message.StartsWith("Bonus.Immutable.Test.INotImmutable does not implement IImmutable<INotImmutable>"));
+            Assert.StartsWith("Bonus.Immutable.Test.INotImmutable does not implement IImmutable<INotImmutable>", ex.Message);
         }
     }
 
-    public interface IBrokenImmutable : IImmutable<IBrokenImmutable> {
+    public interface IBrokenImmutable : IImmutable<IBrokenImmutable>
+    {
         int Number { get; set; }
     }
 
     public partial class TypeGeneratorTest
     {
         [Fact]
-        public void BrokenImmutableTest() {
+        public void BrokenImmutableTest()
+        {
             var ex = Assert.Throws<ArgumentException>(
-                () => TypeGenerator.Generate(new[]{ typeof(IBrokenImmutable) })
+                () => TypeGenerator.Generate(new[] { typeof(IBrokenImmutable) })
             );
-            Assert.True(ex.Message.StartsWith("Bonus.Immutable.Test.IBrokenImmutable.Number has a setter"));
+            Assert.StartsWith("Bonus.Immutable.Test.IBrokenImmutable.Number has a setter", ex.Message);
         }
     }
 
-    public interface Entity : IImmutable<Entity> {
+    public interface Entity : IImmutable<Entity>
+    {
         int Number { get; }
     }
 
     public partial class TypeGeneratorTest
     {
         [Fact]
-        public void ImmutableNameWithout_I_PrefixTest() {
-            var resolver = TypeGenerator.Generate(new[]{ typeof(Entity) });
+        public void ImmutableNameWithout_I_PrefixTest()
+        {
+            var resolver = TypeGenerator.Generate(new[] { typeof(Entity) });
         }
     }
 
-    public interface IId<T> {
+    public interface IId<T>
+    {
         T Id { get; }
     }
-    public interface IEntityWithInterface : IImmutable<IEntityWithInterface>, IId<int> {}
+    public interface IEntityWithInterface : IImmutable<IEntityWithInterface>, IId<int> { }
 
     public partial class TypeGeneratorTest
     {
         [Fact]
-        public void ImmutableWithMultipleInterfacesTest() {
-            var resolver = TypeGenerator.Generate(new[]{ typeof(IEntityWithInterface) });
+        public void ImmutableWithMultipleInterfacesTest()
+        {
+            var resolver = TypeGenerator.Generate(new[] { typeof(IEntityWithInterface) });
         }
     }
 
 
-    public interface NullableEntity : IImmutable<NullableEntity> {
+    public interface NullableEntity : IImmutable<NullableEntity>
+    {
         bool? NullableBoolean { get; }
     }
 
     public partial class TypeGeneratorTest
     {
         [Fact]
-        public void NullableTest() {
-            var resolver = TypeGenerator.Generate(new[]{ typeof(NullableEntity) });
+        public void NullableTest()
+        {
+            var resolver = TypeGenerator.Generate(new[] { typeof(NullableEntity) });
         }
     }
 
 
-    public interface GenericTypeProperty : IImmutable<GenericTypeProperty> {
+    public interface GenericTypeProperty : IImmutable<GenericTypeProperty>
+    {
         IEnumerable<Regex> Patterns { get; }
     }
-    public interface MoreComplexGenericType : IImmutable<MoreComplexGenericType> {
+    public interface MoreComplexGenericType : IImmutable<MoreComplexGenericType>
+    {
         Tuple<Task, Regex> OddTuple { get; }
     }
 
     public partial class TypeGeneratorTest
     {
         [Fact]
-        public void Test() {
+        public void Test()
+        {
             var resolver = TypeGenerator.Generate(new[] {
                 typeof(GenericTypeProperty),
                 typeof(MoreComplexGenericType)

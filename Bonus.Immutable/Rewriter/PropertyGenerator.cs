@@ -8,16 +8,19 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Bonus.Immutable.Rewriter
 {
-    class PropertyGenerator : CSharpSyntaxRewriter {
+    class PropertyGenerator : CSharpSyntaxRewriter
+    {
         private readonly Type _immutable;
 
-        public PropertyGenerator(Type immutable) {
+        public PropertyGenerator(Type immutable)
+        {
             _immutable = immutable;
         }
 
-        public override SyntaxNode VisitNamespaceDeclaration(NamespaceDeclarationSyntax node) {
+        public override SyntaxNode VisitNamespaceDeclaration(NamespaceDeclarationSyntax node)
+        {
             var usings = _immutable.GetAllProperties()
-                .SelectMany(p => new[]{ p.PropertyType }.Concat(p.PropertyType.GetGenericArguments()))
+                .SelectMany(p => new[] { p.PropertyType }.Concat(p.PropertyType.GetGenericArguments()))
                 .Select(type => type.Namespace)
                 .Distinct()
                 .Select(name => UsingDirective(name.ToNameSyntax()))
@@ -28,7 +31,8 @@ namespace Bonus.Immutable.Rewriter
             );
         }
 
-        public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node) {
+        public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
+        {
             var properties = _immutable.GetAllProperties()
                 .Select(property => Property(property))
                 .ToArray<MemberDeclarationSyntax>();
@@ -39,7 +43,8 @@ namespace Bonus.Immutable.Rewriter
         }
 
 
-        public static PropertyDeclarationSyntax Property(PropertyInfo property) {
+        public static PropertyDeclarationSyntax Property(PropertyInfo property)
+        {
             return PropertyDeclaration(
                 property.PropertyType.ToTypeSyntax(),
                 Identifier(property.Name)
