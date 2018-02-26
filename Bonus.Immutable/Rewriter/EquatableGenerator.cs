@@ -9,15 +9,17 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Bonus.Immutable.Rewriter
 {
-    class EquatableGenerator : CSharpSyntaxRewriter {
-
+    class EquatableGenerator : CSharpSyntaxRewriter
+    {
         private readonly Type _immutable;
 
-        public EquatableGenerator(Type immutable) {
+        public EquatableGenerator(Type immutable)
+        {
             _immutable = immutable;
         }
 
-        public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node) {
+        public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
+        {
             return base.VisitClassDeclaration(
                 node.AddMembers(
                     EqualsImplementation(node.Identifier.Text),
@@ -27,9 +29,10 @@ namespace Bonus.Immutable.Rewriter
             );
         }
 
-        private static MethodDeclarationSyntax EqualsImplementation(string type) {
+        private static MethodDeclarationSyntax EqualsImplementation(string type)
+        {
             return MethodDeclaration(
-                PredefinedType( Token(SyntaxKind.BoolKeyword)),
+                PredefinedType(Token(SyntaxKind.BoolKeyword)),
                 Identifier("Equals")
             ).AddModifiers(
                 Token(SyntaxKind.PublicKeyword),
@@ -53,11 +56,12 @@ namespace Bonus.Immutable.Rewriter
             );
         }
 
-        private static MethodDeclarationSyntax EquatableImplementation(Type type) {
+        private static MethodDeclarationSyntax EquatableImplementation(Type type)
+        {
 
             var notNullCheck = BinaryExpression(SyntaxKind.NotEqualsExpression,
                 IdentifierName("other"),
-                LiteralExpression( SyntaxKind.NullLiteralExpression)
+                LiteralExpression(SyntaxKind.NullLiteralExpression)
             );
 
             var body = type.GetAllProperties()
@@ -90,7 +94,8 @@ namespace Bonus.Immutable.Rewriter
                 .AddBodyStatements(ReturnStatement(body));
         }
 
-        private static MethodDeclarationSyntax GetHashCode(Type type) {
+        private static MethodDeclarationSyntax GetHashCode(Type type)
+        {
 
             var statements = new List<StatementSyntax>() {
                 LocalDeclarationStatement(
@@ -140,7 +145,8 @@ namespace Bonus.Immutable.Rewriter
                 );
         }
 
-        private static ExpressionStatementSyntax HashCodeForProperty(PropertyInfo property) {
+        private static ExpressionStatementSyntax HashCodeForProperty(PropertyInfo property)
+        {
 
             return ExpressionStatement(
                 AssignmentExpression(
