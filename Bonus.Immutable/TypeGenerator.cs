@@ -52,9 +52,7 @@ namespace Bonus.Immutable
             var compilationUnits = types.Select(type =>
                 GetRewriters(type).Concat(new[]{
                     getRewrite != null ? getRewrite(type) : node => node,
-#if DEBUG
                     node => node.NormalizeWhitespace(),
-#endif
                 }).Aggregate(
                     CompilationUnit()
                         .AddMembers(
@@ -63,7 +61,7 @@ namespace Bonus.Immutable
                         ),
                     (prev, curr) => curr(prev)
                 )
-            );
+            ).ToArray();
 
             var compilation = CSharpCompilation.Create(
                 @namespace,
@@ -84,7 +82,11 @@ namespace Bonus.Immutable
                     var error = string.Join(
                         Environment.NewLine,
                         result.Diagnostics.Select(d => d.ToString())
-                    );
+                    ) + Environment.NewLine +
+                    "--- Source ---" + Environment.NewLine +
+                    string.Join(
+                        Environment.NewLine,
+                        compilationUnits.Select(cu => cu.ToFullString()));
                     throw new Exception(error);
                 }
                 peStream.Position = 0;
