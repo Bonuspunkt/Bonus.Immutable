@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
+using System.Threading;
 using Bonus.Immutable.Rewriter;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -19,7 +20,7 @@ namespace Bonus.Immutable
         )
         {
             var cachedTypes = types.ToArray();
-            @namespace = @namespace ?? GenerateNamespace();
+            @namespace = @namespace ?? $"Gen{GenerateRandomString()}";
 
             foreach (var type in cachedTypes)
             {
@@ -63,8 +64,9 @@ namespace Bonus.Immutable
                 )
             ).ToArray();
 
+            var assemblyName = $"Immutable.{GenerateRandomString()}";
             var compilation = CSharpCompilation.Create(
-                @namespace,
+                assemblyName,
                 compilationUnits.Select(c => c.SyntaxTree),
                 GetReferences(cachedTypes),
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
@@ -103,9 +105,18 @@ namespace Bonus.Immutable
             }
         }
 
-        private static string GenerateNamespace()
+        private static int _seed = 0;
+        private static string GenerateRandomString()
         {
             var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvxyz".ToCharArray();
+
+            long GetRandomNumber()
+            {
+                var seed = Interlocked.Increment(ref _seed);
+                var pseudorandom = new Random(seed);
+                var number = pseudorandom.Next(int.MaxValue) + ((long) pseudorandom.Next(int.MaxValue) << 32);
+                return number;
+            }
 
             IEnumerable<char> Convert(long number, int radix)
             {
@@ -121,13 +132,13 @@ namespace Bonus.Immutable
                 } while (number > 0);
             }
 
-            var timeFragment = Convert(DateTime.Now.Ticks, chars.Length).Reverse();
-            return $"Gen{ string.Join("", timeFragment) }";
+            var timeFragment = Convert(DateTime.Now.Ticks, chars.Length).Reverse().ToArray();
+            var random = Convert(GetRandomNumber(), chars.Length);
+            return $"{ string.Join("", timeFragment) }_{string.Join("", random)}";
         }
 
         private static ClassDeclarationSyntax Class(Type immutable)
         {
-
             var className = immutable.Name;
             if (className.StartsWith("I"))
             {
