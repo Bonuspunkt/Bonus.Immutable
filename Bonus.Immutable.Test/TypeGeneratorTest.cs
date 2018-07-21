@@ -1,54 +1,74 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Xunit;
 
 namespace Bonus.Immutable.Test
 {
-    public interface IEntity : IImmutable<IEntity>
-    {
-        int Id { get; }
-        string Text { get; }
-    }
+    public interface IEmptyInterface :IImmutable<IEmptyInterface> { }
 
     public partial class TypeGeneratorTest
     {
         [Fact]
-        public void GenerateValidInterface()
+        public void GenerateToSuppliedNamespace()
         {
-            var resolver = TypeGenerator.Generate(new[] { typeof(IEntity) });
+            var resolver = TypeGenerator.Generate(
+                new[] { typeof(IEmptyInterface) },
+                "Name.Space"
+            );
 
-            var entity = resolver.CreateInstance<IEntity>();
-            Assert.Equal(default(int), entity.Id);
-            Assert.Equal(default(string), entity.Text);
+            var type = resolver(typeof(IEmptyInterface));
+            Assert.Equal("Name.Space", type.Namespace);
+        }
+    }
 
-            var step1 = entity.Set(e => e.Id, 1);
-            Assert.Equal(1, step1.Id);
-            Assert.Equal(default(string), step1.Text);
+    public interface IReturnOne
+    {
+        int ReturnOne();
+    }
+    public interface IExtendendWithInterfaceWithMethod : IReturnOne, IImmutable<IExtendendWithInterfaceWithMethod> { }
 
-            var step2 = entity.Set(e => e.Id, 2).Set(e => e.Text, "abc");
-            Assert.Equal(2, step2.Id);
-            Assert.Equal("abc", step2.Text);
+    public partial class TypeGeneratorTest
+    {
+        class ReturnOneGenerator : CSharpSyntaxRewriter
+        {
+            public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
+            {
+                return base.VisitClassDeclaration(node.AddMembers(
+                    SyntaxFactory.MethodDeclaration(
+                            SyntaxFactory.PredefinedType(
+                                SyntaxFactory.Token(SyntaxKind.IntKeyword)),
+                            SyntaxFactory.Identifier("ReturnOne"))
+                        .WithModifiers(
+                            SyntaxFactory.TokenList(
+                                SyntaxFactory.Token(SyntaxKind.PublicKeyword)))
+                        .WithBody(
+                            SyntaxFactory.Block(
+                                SyntaxFactory.SingletonList<StatementSyntax>(
+                                    SyntaxFactory.ReturnStatement(
+                                        SyntaxFactory.LiteralExpression(
+                                            SyntaxKind.NumericLiteralExpression,
+                                            SyntaxFactory.Literal(1))))))
+                ));
+            }
         }
 
         [Fact]
-        public void GenerateVerifyAdditionalParameters()
+        public void GenerateWithCustomRewrite()
         {
-            var executed = false;
+            var returnOneGenerator = new ReturnOneGenerator();
 
             var resolver = TypeGenerator.Generate(
-                new[] { typeof(IEntity) },
-                "Name.Space",
-                _ => node => { executed = true; return node; }
+                new[] { typeof(IExtendendWithInterfaceWithMethod) },
+                getRewrite: interfaceType => node => (CompilationUnitSyntax)returnOneGenerator.Visit(node)
             );
 
-            Assert.True(executed);
-
-            var type = resolver(typeof(IEntity));
-            Assert.Equal("Name.Space", type.Namespace);
-
+            var instance = resolver.CreateInstance<IExtendendWithInterfaceWithMethod>();
+            Assert.Equal(1, instance.ReturnOne());
         }
     }
 
@@ -94,6 +114,7 @@ namespace Bonus.Immutable.Test
         public void ImmutableNameWithout_I_PrefixTest()
         {
             var resolver = TypeGenerator.Generate(new[] { typeof(Entity) });
+            var entity = resolver.CreateInstance<Entity>();
         }
     }
 
@@ -109,6 +130,7 @@ namespace Bonus.Immutable.Test
         public void ImmutableWithMultipleInterfacesTest()
         {
             var resolver = TypeGenerator.Generate(new[] { typeof(IEntityWithInterface) });
+            var entityWithInterface = resolver.CreateInstance<IEntityWithInterface>();
         }
     }
 
@@ -124,6 +146,7 @@ namespace Bonus.Immutable.Test
         public void NullableTest()
         {
             var resolver = TypeGenerator.Generate(new[] { typeof(NullableEntity) });
+            var nullableEntity = resolver.CreateInstance<NullableEntity>();
         }
     }
 
@@ -134,7 +157,7 @@ namespace Bonus.Immutable.Test
     }
     public interface MoreComplexGenericType : IImmutable<MoreComplexGenericType>
     {
-        Tuple<Task, Regex> OddTuple { get; }
+        (Task, Regex) OddTuple { get; }
     }
 
     public partial class TypeGeneratorTest
@@ -146,6 +169,9 @@ namespace Bonus.Immutable.Test
                 typeof(GenericTypeProperty),
                 typeof(MoreComplexGenericType)
             });
+
+            var genericTypeProperty = resolver.CreateInstance<GenericTypeProperty>();
+            var moreComplexGenericType = resolver.CreateInstance<MoreComplexGenericType>();
         }
     }
 }
