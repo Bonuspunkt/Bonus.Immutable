@@ -48,7 +48,7 @@ namespace Bonus.Immutable.Rewriter
                                 BinaryExpression(
                                     SyntaxKind.AsExpression,
                                     IdentifierName("obj"),
-                                    IdentifierName("Entity")
+                                    IdentifierName(type)
                                 )
                             )
                         )
