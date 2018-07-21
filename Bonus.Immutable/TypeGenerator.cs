@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -19,15 +18,16 @@ namespace Bonus.Immutable
             IEnumerable<Type> types, string @namespace = null, Func<Type, Rewrite> getRewrite = null
         )
         {
+            var cachedTypes = types.ToArray();
             @namespace = @namespace ?? GenerateNamespace();
 
-            foreach (var type in types)
+            foreach (var type in cachedTypes)
             {
                 var typeInfo = type.GetTypeInfo();
 
                 if (!typeInfo.IsInterface)
                 {
-                    throw new ArgumentException($"{ type.FullName } is not an interface", nameof(types));
+                    throw new ArgumentException($"{ type.FullName } is not an interface", nameof(cachedTypes));
                 }
 
                 try
@@ -36,20 +36,20 @@ namespace Bonus.Immutable
                 }
                 catch
                 {
-                    throw new ArgumentException($"{ type.FullName } does not implement IImmutable<{ type.Name }>", nameof(types));
+                    throw new ArgumentException($"{ type.FullName } does not implement IImmutable<{ type.Name }>", nameof(cachedTypes));
                 }
 
                 foreach (var property in type.GetAllProperties())
                 {
                     if (property.CanWrite)
                     {
-                        throw new ArgumentException($"{ type.FullName }.{property.Name} has a setter", nameof(types));
+                        throw new ArgumentException($"{ type.FullName }.{property.Name} has a setter", nameof(cachedTypes));
                     }
                 }
             }
 
 
-            var compilationUnits = types.Select(type =>
+            var compilationUnits = cachedTypes.Select(type =>
                 GetRewriters(type).Concat(new[]{
                     getRewrite != null ? getRewrite(type) : node => node,
                     node => node.NormalizeWhitespace(),
@@ -66,7 +66,7 @@ namespace Bonus.Immutable
             var compilation = CSharpCompilation.Create(
                 @namespace,
                 compilationUnits.Select(c => c.SyntaxTree),
-                GetReferences(types),
+                GetReferences(cachedTypes),
                 new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary)
                     .WithOptimizationLevel(OptimizationLevel.Release)
                     .WithPlatform(Platform.AnyCpu)
@@ -95,7 +95,7 @@ namespace Bonus.Immutable
                 var assembly = AssemblyLoadContext.Default.LoadFromStream(peStream, pdbStream);
 
                 var translations = assembly.GetExportedTypes().ToDictionary(
-                    implementedType => types.First(type => type.GetTypeInfo().IsAssignableFrom(implementedType)),
+                    implementedType => cachedTypes.First(type => type.GetTypeInfo().IsAssignableFrom(implementedType)),
                     implementedType => implementedType
                 );
 
@@ -155,7 +155,7 @@ namespace Bonus.Immutable
 
         private static IEnumerable<MetadataReference> GetReferences(IEnumerable<Type> types)
         {
-            var assemblies = types.Select(type => type.GetTypeInfo().Assembly);
+            var assemblies = types.Select(type => type.GetTypeInfo().Assembly).ToArray();
             var referencedAssemblies = ResolveReferences(assemblies);
 
             return assemblies.Concat(referencedAssemblies)
@@ -178,7 +178,7 @@ namespace Bonus.Immutable
 
                 foreach (var refName in refNames)
                 {
-                    if (!assemblyNames.Any(name => refName.Name == name.Name))
+                    if (assemblyNames.All(name => refName.Name != name.Name))
                     {
                         assemblyNames.Add(refName);
                     }
