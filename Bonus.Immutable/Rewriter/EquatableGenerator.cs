@@ -90,7 +90,7 @@ namespace Bonus.Immutable.Rewriter
                     Identifier("Equals")
                 )
                 .AddModifiers(Token(SyntaxKind.PublicKeyword))
-                .AddParameterListParameters(Parameter(Identifier("other")).WithType(type.FullName.ToNameSyntax()))
+                .AddParameterListParameters(Parameter(Identifier("other")).WithType(type.ToTypeSyntax()))
                 .AddBodyStatements(ReturnStatement(body));
         }
 

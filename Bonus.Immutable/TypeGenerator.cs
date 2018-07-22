@@ -151,7 +151,7 @@ namespace Bonus.Immutable
 
             return ClassDeclaration(className)
                 .AddBaseListTypes(
-                    SimpleBaseType(immutable.FullName.ToNameSyntax())
+                    SimpleBaseType(immutable.ToTypeSyntax())
                 )
                 .AddModifiers(Token(SyntaxKind.PublicKeyword));
         }

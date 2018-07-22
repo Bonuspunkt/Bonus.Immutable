@@ -46,23 +46,22 @@ namespace Bonus.Immutable
 
         public static TypeSyntax ToTypeSyntax(this Type type)
         {
-
             if (type.GetTypeInfo().IsGenericType)
             {
                 var typeDef = type.GetGenericTypeDefinition();
-                var arguments = type.GetGenericArguments();
+                var arguments = type.GetGenericArguments().Select(typeArg => typeArg.ToTypeSyntax());
 
-                return GenericName(Identifier(typeDef.Name.Split('`').First()))
+                var @namespace = typeDef.Namespace.ToNameSyntax();
+                var typeName = GenericName(Identifier(typeDef.Name.Split('`').First()))
                     .WithTypeArgumentList(
                         TypeArgumentList(
-                            SeparatedList<TypeSyntax>(
-                                arguments.Select(arg => IdentifierName(arg.Name))
-                            )
+                            SeparatedList(arguments)
                         )
                     );
-            }
 
-            return type.Name.ToNameSyntax();
+                return QualifiedName(@namespace, typeName);
+            }
+            return type.FullName.Replace("+", ".").ToNameSyntax();
         }
     }
 }

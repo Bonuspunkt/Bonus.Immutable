@@ -19,16 +19,6 @@ namespace Bonus.Immutable.Rewriter
         }
 
 
-        public override SyntaxNode VisitNamespaceDeclaration(NamespaceDeclarationSyntax node)
-        {
-            return base.VisitNamespaceDeclaration(
-                node.AddUsings(
-                    UsingDirective(_immutable.Namespace.ToNameSyntax()),
-                    UsingDirective(typeof(Dictionary<,>).Namespace.ToNameSyntax())
-                )
-            );
-        }
-
         public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
         {
             return base.VisitClassDeclaration(
@@ -41,18 +31,13 @@ namespace Bonus.Immutable.Rewriter
         private static MethodDeclarationSyntax ImmutableSet(Type type, string selfName)
         {
             return MethodDeclaration(
-                type.FullName.ToNameSyntax(),
+                type.ToTypeSyntax(),
                 Identifier("Set")
             )
             .AddModifiers(Token(SyntaxKind.PublicKeyword))
             .AddParameterListParameters(
                 Parameter(Identifier("properties"))
-                    .WithType(GenericName(Identifier("Dictionary"))
-                        .AddTypeArgumentListArguments(
-                            PredefinedType(Token(SyntaxKind.StringKeyword)),
-                            PredefinedType(Token(SyntaxKind.ObjectKeyword))
-                        )
-                    )
+                    .WithType(typeof(Dictionary<string, object>).ToTypeSyntax())
                     .WithDefault(EqualsValueClause(LiteralExpression(SyntaxKind.NullLiteralExpression)))
             )
             .AddBodyStatements(

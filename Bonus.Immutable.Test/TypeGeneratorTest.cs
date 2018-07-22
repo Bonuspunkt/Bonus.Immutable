@@ -174,4 +174,54 @@ namespace Bonus.Immutable.Test
             var moreComplexGenericType = resolver.CreateInstance<MoreComplexGenericType>();
         }
     }
+
+    public interface Child : IImmutable<Child>
+    {
+    }
+
+    public interface Parent : IImmutable<Parent>
+    {
+        Child Child { get; }
+    }
+
+    public partial class TypeGeneratorTest
+    {
+        [Fact]
+        public void ClassWithImmutablePropertyTest()
+        {
+            var resolver = TypeGenerator.Generate(new[]
+            {
+                typeof(Parent),
+                typeof(Child)
+            });
+        }
+    }
+
+    public partial class TypeGeneratorTest
+    {
+        public interface INested : IImmutable<INested> { }
+
+        [Fact]
+        public void NestedClassTest()
+        {
+            var resolver = TypeGenerator.Generate(new[] {typeof(INested)});
+        }
+    }
+
+    public partial class TypeGeneratorTest
+    {
+        public class Nested
+        {
+            public interface IDeepNested : IImmutable<IDeepNested>
+            {
+            }
+        }
+
+        [Fact]
+        public void DeepNestedClassTest()
+        {
+            var resolver = TypeGenerator.Generate(new[] { typeof(Nested.IDeepNested) });
+        }
+    }
+
 }
