@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -58,7 +59,6 @@ namespace Bonus.Immutable.Rewriter
 
         private static MethodDeclarationSyntax EquatableImplementation(Type type)
         {
-
             var notNullCheck = BinaryExpression(SyntaxKind.NotEqualsExpression,
                 IdentifierName("other"),
                 LiteralExpression(SyntaxKind.NullLiteralExpression)
@@ -66,18 +66,7 @@ namespace Bonus.Immutable.Rewriter
 
             var body = type.GetAllProperties()
                 .Select(property =>
-                    InvocationExpression(
-                        IdentifierName("Equals")
-                    ).AddArgumentListArguments(
-                        Argument(IdentifierName(property.Name)),
-                        Argument(
-                            MemberAccessExpression(
-                                SyntaxKind.SimpleMemberAccessExpression,
-                                IdentifierName("other"),
-                                IdentifierName(property.Name)
-                            )
-                        )
-                    )
+                    EqualsCondition(property)
                 )
                 .Aggregate(
                     notNullCheck,
@@ -92,6 +81,45 @@ namespace Bonus.Immutable.Rewriter
                 .AddModifiers(Token(SyntaxKind.PublicKeyword))
                 .AddParameterListParameters(Parameter(Identifier("other")).WithType(type.ToTypeSyntax()))
                 .AddBodyStatements(ReturnStatement(body));
+        }
+
+        private static InvocationExpressionSyntax EqualsCondition(PropertyInfo property)
+        {
+            if (property.PropertyType != typeof(string) &&
+                typeof(IEnumerable).IsAssignableFrom(property.PropertyType))
+            {
+                return InvocationExpression(
+                        MemberAccessExpression(
+                            SyntaxKind.SimpleMemberAccessExpression,
+                            MemberAccessExpression(
+                                SyntaxKind.SimpleMemberAccessExpression,
+                                MemberAccessExpression(
+                                    SyntaxKind.SimpleMemberAccessExpression,
+                                    IdentifierName("System"),
+                                    IdentifierName("Linq")),
+                                IdentifierName("Enumerable")),
+                            IdentifierName("SequenceEqual")))
+                    .AddArgumentListArguments(
+                        Argument(IdentifierName(property.Name)),
+                        Argument(
+                            MemberAccessExpression(
+                                SyntaxKind.SimpleMemberAccessExpression,
+                                IdentifierName("other"),
+                                IdentifierName(property.Name)))
+                    );
+            }
+            return InvocationExpression(
+                IdentifierName("Equals")
+            ).AddArgumentListArguments(
+                Argument(IdentifierName(property.Name)),
+                Argument(
+                    MemberAccessExpression(
+                        SyntaxKind.SimpleMemberAccessExpression,
+                        IdentifierName("other"),
+                        IdentifierName(property.Name)
+                    )
+                )
+            );
         }
 
         private static MethodDeclarationSyntax GetHashCode(Type type)
