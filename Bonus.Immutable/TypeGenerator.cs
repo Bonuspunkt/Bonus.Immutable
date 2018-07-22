@@ -16,7 +16,7 @@ namespace Bonus.Immutable
     public class TypeGenerator
     {
         public static ImmutableResolver Generate(
-            IEnumerable<Type> types, string @namespace = null, Func<Type, Rewrite> getRewrite = null
+            IEnumerable<Type> types, string @namespace = null, Func<Type, IEnumerable<Rewrite>> getRewriters = null
         )
         {
             var cachedTypes = types.ToArray();
@@ -49,20 +49,18 @@ namespace Bonus.Immutable
                 }
             }
 
+            getRewriters = getRewriters ?? GetRewriters;
 
-            var compilationUnits = cachedTypes.Select(type =>
-                GetRewriters(type).Concat(new[]{
-                    getRewrite != null ? getRewrite(type) : node => node,
-                    node => node.NormalizeWhitespace(),
-                }).Aggregate(
-                    CompilationUnit()
-                        .AddMembers(
-                            NamespaceDeclaration(@namespace.ToNameSyntax())
-                                .AddMembers(Class(type))
-                        ),
-                    (prev, curr) => curr(prev)
-                )
-            ).ToArray();
+            var compilationUnits = cachedTypes
+                .Select(type => getRewriters(type).Aggregate(
+                        CompilationUnit()
+                            .AddMembers(
+                                NamespaceDeclaration(@namespace.ToNameSyntax())
+                                    .AddMembers(Class(type))
+                            ),
+                        (prev, curr) => curr(prev)
+                    ).NormalizeWhitespace()
+                ).ToArray();
 
             var assemblyName = $"Immutable.{GenerateRandomString()}";
             var compilation = CSharpCompilation.Create(
@@ -159,9 +157,9 @@ namespace Bonus.Immutable
 
         private static IEnumerable<Rewrite> GetRewriters(Type type)
         {
-            yield return unit => (CompilationUnitSyntax)new PropertyGenerator(type).Visit(unit);
-            yield return unit => (CompilationUnitSyntax)new EquatableGenerator(type).Visit(unit);
-            yield return unit => (CompilationUnitSyntax)new ImmutableSetGenerator(type).Visit(unit);
+            yield return Implement.Properties(type);
+            yield return Implement.Equatable(type);
+            yield return Implement.ImmutableSet(type);
         }
 
         private static IEnumerable<MetadataReference> GetReferences(IEnumerable<Type> types)

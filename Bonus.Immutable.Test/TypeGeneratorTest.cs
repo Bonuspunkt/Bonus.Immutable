@@ -60,11 +60,17 @@ namespace Bonus.Immutable.Test
         [Fact]
         public void GenerateWithCustomRewrite()
         {
-            var returnOneGenerator = new ReturnOneGenerator();
+            Rewrite implementReturnOne = node => (CompilationUnitSyntax) new ReturnOneGenerator().Visit(node);
 
             var resolver = TypeGenerator.Generate(
                 new[] { typeof(IExtendendWithInterfaceWithMethod) },
-                getRewrite: interfaceType => node => (CompilationUnitSyntax)returnOneGenerator.Visit(node)
+                getRewriters: interfaceType => new[]
+                {
+                    Implement.Properties(interfaceType),
+                    Implement.Equatable(interfaceType),
+                    Implement.ImmutableSet(interfaceType),
+                    implementReturnOne
+                }
             );
 
             var instance = resolver.CreateInstance<IExtendendWithInterfaceWithMethod>();
