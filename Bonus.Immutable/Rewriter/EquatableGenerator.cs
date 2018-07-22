@@ -22,14 +22,14 @@ namespace Bonus.Immutable.Rewriter
         {
             return base.VisitClassDeclaration(
                 node.AddMembers(
-                    EqualsImplementation(node.Identifier.Text),
+                    EqualsImplementation(_immutable),
                     EquatableImplementation(_immutable),
                     GetHashCode(_immutable)
                 )
             );
         }
 
-        private static MethodDeclarationSyntax EqualsImplementation(string type)
+        private static MethodDeclarationSyntax EqualsImplementation(Type type)
         {
             return MethodDeclaration(
                 PredefinedType(Token(SyntaxKind.BoolKeyword)),
@@ -48,7 +48,7 @@ namespace Bonus.Immutable.Rewriter
                                 BinaryExpression(
                                     SyntaxKind.AsExpression,
                                     IdentifierName("obj"),
-                                    IdentifierName(type)
+                                    type.ToTypeSyntax()
                                 )
                             )
                         )
